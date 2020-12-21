@@ -1,5 +1,6 @@
 TOPLEVEL_LANG ?= vhdl
 SIM ?= ghdl
+SIM_ARGS ?= --vcd=waveform.vcd
 
 PWD=$(shell pwd)
 

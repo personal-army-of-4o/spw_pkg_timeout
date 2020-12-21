@@ -11,26 +11,37 @@ use ieee.std_logic_1164.all;
 
 entity spw_pkg_timeout is
 	port (
-		iClk: in std_logic;
-		iReset: in std_logic;
+		iClk           : in  std_logic;
+		iReset         : in  std_logic;
 
-		iTimeout_ticks: in std_logic_vector (31 downto 0);
+		iTimeout_ticks : in  std_logic_vector (31 downto 0);
 
-		iValid: in std_logic;
-		iData: in std_logic_vector (8 downto 0);
-		oAck: out std_logic;
+		iValid         : in  std_logic;
+		iData          : in  std_logic_vector (8 downto 0);
+		oAck           : out std_logic;
 
-		oValid: out std_logic;
-		oData: out std_logic_vector (8 downto 0);
-		iAck: in std_logic
+		oValid         : out std_logic;
+		oData          : out std_logic_vector (8 downto 0);
+		iAck           : in  std_logic
 	);
 end entity;
 
+-- Dummy architecture to test with cocotb
 architecture behavior of spw_pkg_timeout is
 begin
-  process (iClk) begin
-    if rising_edge(iClk) then
-      oData <= iData;
+  process (iClk, iReset) begin
+    if (iReset = '1') then
+      oAck   <= '0';
+      oValid <= '0';
+      oData  <= "000000000";
+    elsif rising_edge(iClk) then
+      oAck   <= '0';
+      oValid <= '0';
+      if (iValid = '1') then
+        oData  <= iData;
+        oValid <= '1';
+        oAck   <= '1';
+      end if;
     end if;
   end process;
 end behavior;
