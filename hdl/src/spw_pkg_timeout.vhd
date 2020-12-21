@@ -14,7 +14,7 @@ entity spw_pkg_timeout is
 		iClk: in std_logic;
 		iReset: in std_logic;
 
-		iTimeout_ticks: in std_logic_vector;
+		iTimeout_ticks: in std_logic_vector (31 downto 0);
 
 		iValid: in std_logic;
 		iData: in std_logic_vector (8 downto 0);
@@ -25,3 +25,12 @@ entity spw_pkg_timeout is
 		iAck: in std_logic
 	);
 end entity;
+
+architecture behavior of spw_pkg_timeout is
+begin
+  process (iClk) begin
+    if rising_edge(iClk) then
+      oData <= iData;
+    end if;
+  end process;
+end behavior;
