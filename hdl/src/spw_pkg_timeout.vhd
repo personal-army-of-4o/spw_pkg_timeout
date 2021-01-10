@@ -8,6 +8,8 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+library work;
+use work.config.all;
 
 
 entity spw_pkg_timeout is
@@ -19,7 +21,7 @@ entity spw_pkg_timeout is
         iClk: in std_logic;
         iReset: in std_logic;
 
-        iTimeout_ticks: in std_logic_vector;
+        iTimeout_ticks: in std_logic_vector (cTimeout_ticks_width-1 downto 0);
 
         iValid: in std_logic;
         iData: in std_logic_vector (8 downto 0);
