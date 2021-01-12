@@ -75,7 +75,7 @@ begin
             sCnt <= (others => '0');
         else
             if iClk'event and iClk = '1' then
-                if sState = armed then
+                if sState = armed and iValid = '0' then
                     sCnt <= sCnt+1;
                 else
                     sCnt <= (others => '0');
@@ -84,7 +84,7 @@ begin
         end if;
     end process;
 
-    process (sState, iAck, sArmed_case_word)
+    process (sState, iValid, iAck, sArmed_case_word, sEp)
     begin
         sState_next <= sState;
         case sState is
@@ -123,9 +123,9 @@ begin
         end if;
     end process;
 
-    process (sState_next, iAck, iValid, iData)
+    process (sState, iAck, iValid, iData)
     begin
-        case sState_next is
+        case sState is
             when idle =>
                 oValid <= '0';
                 oData <= '0' & x"00";
