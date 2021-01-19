@@ -4,3 +4,6 @@
 [submodule "buildscripts"]
 	path = buildscripts
 	url = http://github.com/personal-army-of-4o/buildscripts.git
+[submodule "cocotb_helper"]
+	path = cocotb_helper
+	url = https://github.com/personal-army-of-4o/cocotb_helper.git

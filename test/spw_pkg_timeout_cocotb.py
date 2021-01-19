@@ -5,6 +5,8 @@ import itertools
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, RisingEdge, Edge, ClockCycles, Timer
 
+from DataInterface import DataInterface
+
 SIM_UNDERFLOW_READ=True
 
 def init_dut(dut):
@@ -22,83 +24,6 @@ def do_reset(dut, len):
     yield ClockCycles(dut.iClk, len)
     dut.iReset <= 1
 
-@cocotb.coroutine
-def get_signal(clk, ack, data):
-    yield FallingEdge(clk)
-    ack <= 1
-    return data.value
-
-@cocotb.coroutine
-def write_symbol(dut, s):
-    print ('sending symbol ', hex(s))    
-    yield FallingEdge(dut.iClk)
-    dut.iData = s
-    dut.iValid = 1
-    yield RisingEdge(dut.iClk)
-    while dut.oAck == 0:
-        yield RisingEdge(dut.iClk)
-    yield Timer(1, units="ns")
-    dut.iValid = 0
-
-@cocotb.coroutine
-def write_pkg(dut, len, seed, hangup = False):
-    eop = [256]
-    random.seed(seed)
-    package = (random.randint(0, 127) for _ in range (len-1))
-    if hangup == False:
-        package = itertools.chain(package, iter(eop))
-    while True:
-        try:
-            yield write_symbol(dut, next(package))
-        except StopIteration:
-            break
-
-@cocotb.coroutine
-def get_symbol(dut):
-    if SIM_UNDERFLOW_READ:
-        dut.iAck = 1;
-        yield RisingEdge(dut.iClk)
-        while dut.oValid == 0:
-            yield RisingEdge(dut.iClk)
-        return dut.oData.value
-    
-    else:
-        yield Timer (1, units='ns')
-        dut.iAck = 0
-        while dut.oValid == 0:
-            yield RisingEdge(dut.iClk)
-        yield FallingEdge(dut.iClk)
-        s = dut.oData
-        dut.iAck = 1
-        yield RisingEdge(dut.iClk)
-        return s.value
-
-@cocotb.coroutine
-def check_symbol(dut, s):
-    ss = yield get_symbol(dut)
-    print ('got symbol ', hex(ss))    
-    if s != ss:
-        pass
-
-@cocotb.coroutine
-def read_pkg(dut, len, seed, do_eep = False):
-    eop = [256]
-    eep = [257]
-    random.seed(seed)
-    rare_package = (random.randint(0, 127) for _ in range (len-1))
-    if do_eep:
-        package = itertools.chain(rare_package, iter(eop))
-    else:
-        package = itertools.chain(rare_package, iter(eep))
- 
-    dut.iAck = 0
-    yield RisingEdge(dut.iClk)
-    while True:
-        try:
-            yield check_symbol(dut, next(package))
-        except StopIteration:
-            break
-
 @cocotb.test()
 def positive_test(dut):
     """ Test where package should be read full """
@@ -115,8 +40,22 @@ def positive_test(dut):
     yield ClockCycles(dut.iClk, 2)
 
     seed = 0
-    cocotb.fork(write_pkg(dut, 8, seed))
-    cocotb.fork(read_pkg(dut, 16, seed))
+    length = 5
+    eop = [256]
+    prng1 = random.Random(seed)
+    prng2 = random.Random(seed)
+
+    pkg1 = (prng1.randint(0, 127) for _ in range (length-1))
+    pkg1 = itertools.chain(pkg1, iter(eop))
+
+    pkg2 = (prng2.randint(0, 127) for _ in range (length-1))
+    pkg2 = itertools.chain(pkg2, iter(eop))
+
+    reader = DataInterface(dut.iClk, dut.oValid, dut.oData, dut.iAck)
+    writer = DataInterface(dut.iClk, dut.iValid, dut.iData, dut.oAck)
+
+    cocotb.fork(reader.Read(pkg1))
+    cocotb.fork(writer.Write(pkg2))
 
     yield ClockCycles(dut.iClk, 500)
 
@@ -138,8 +77,21 @@ def timeout_test(dut):
     yield ClockCycles(dut.iClk, 2)
 
     seed = 0
-    cocotb.fork(write_pkg(dut, 8, seed, True))
-    cocotb.fork(read_pkg(dut, 16, seed, True))
+    length = 5
+    eep = [257]
+    prng1 = random.Random(seed)
+    prng2 = random.Random(seed)
+
+    pkg1 = (prng1.randint(0, 127) for _ in range (length-1))
+
+    pkg2 = (prng2.randint(0, 127) for _ in range (length-1))
+    pkg2 = itertools.chain(pkg2, iter(eep))
+
+    reader = DataInterface(dut.iClk, dut.oValid, dut.oData, dut.iAck)
+    writer = DataInterface(dut.iClk, dut.iValid, dut.iData, dut.oAck)
+
+    cocotb.fork(reader.Read(pkg1))
+    cocotb.fork(writer.Write(pkg2))
 
     yield ClockCycles(dut.iClk, 500)
 

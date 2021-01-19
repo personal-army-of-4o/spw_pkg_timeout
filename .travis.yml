@@ -2,7 +2,7 @@ env:
   global:
     - IMG1=bth105/cocotbghdl:1.4.0rc2
     - TESTSCRIPT=test.bash
-    - IMG=ghdl/synth:formal
+    - IMG2=ghdl/synth:formal
     - SCRIPTDIR=buildscripts
     - BUILDSCRIPT=synth.bash
     - UPLOADSCRIPT=upload.bash
@@ -17,9 +17,6 @@ before_install:
 
 # Here are the list of run scripts of different DUTs/testcases
 script:
-    # Testing the installation of the ghdl
-  - docker run -t $IMG:$TAG ghdl --version
-  
     # Mount the repo to docker, and run the hello world example
   - > 
     docker run -t -v `pwd`:$WORKDIR $IMG1
