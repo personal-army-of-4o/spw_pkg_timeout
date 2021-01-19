@@ -1,15 +1,19 @@
 env:
   global:
-    - IMG=bth105/cocotbghdl
-    - TAG=1.4.0rc2
-    - SCRIPT=test.bash
+    - IMG1=bth105/cocotbghdl:1.4.0rc2
+    - TESTSCRIPT=test.bash
+    - IMG=ghdl/synth:formal
+    - SCRIPTDIR=buildscripts
+    - BUILDSCRIPT=synth.bash
+    - UPLOADSCRIPT=upload.bash
     - WORKDIR=/mnt/data
 
 services:
   - docker
 
 before_install:
-- docker pull $IMG:$TAG
+  - docker pull $IMG1
+  - docker pull $IMG2
 
 # Here are the list of run scripts of different DUTs/testcases
 script:
@@ -18,5 +22,16 @@ script:
   
     # Mount the repo to docker, and run the hello world example
   - > 
-    docker run -t -v `pwd`:$WORKDIR $IMG:$TAG
-    /bin/bash -c "cd $WORKDIR; bash $WORKDIR/$SCRIPT"
+    docker run -t -v `pwd`:$WORKDIR $IMG1
+    /bin/bash -c "cd $WORKDIR; bash $WORKDIR/$TESTSCRIPT"
+  - >
+    docker run -t -v `pwd`:$WORKDIR $IMG2
+    /bin/bash -c "cd $WORKDIR; bash $WORKDIR/$SCRIPTDIR/$BUILDSCRIPT"
+
+deploy:
+  provider: script
+  skip_cleanup: true
+  script: bash ./$SCRIPTDIR/$UPLOADSCRIPT
+  on:
+    branch: unitize
+

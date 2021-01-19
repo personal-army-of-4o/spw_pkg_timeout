@@ -1,16 +1,19 @@
 TOPLEVEL_LANG ?= vhdl
 SIM ?= ghdl
 SIM_ARGS ?= --wave=waveform.ghw
+COMPILE_ARGS ?= --std=08
 
 PWD=$(shell pwd)
+SRC_PREFIX=$(PWD)/../
+FILELIST=$(shell cat ../filelist)
 
 ifeq ($(TOPLEVEL_LANG),vhdl)
-    VHDL_SOURCES = $(PWD)/../hdl/src/spw_pkg_timeout.vhd $(PWD)/../hdl/tb/tb_top.vhd
+    VHDL_SOURCES = $(addprefix $(SRC_PREFIX), $(FILELIST))
 else
     $(error "A valid value (verilog or vhdl) was not provided for TOPLEVEL_LANG=$(TOPLEVEL_LANG)")
 endif
 
-TOPLEVEL := tb_top
+TOPLEVEL := spw_pkg_timeout
 MODULE   := $(TOPLEVEL)_cocotb
 
 include $(shell cocotb-config --makefiles)/Makefile.sim

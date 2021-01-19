@@ -1,0 +1,4 @@
+./JSON-for-VHDL/src/Encodings.pkg.vhdl
+./JSON-for-VHDL/src/JSON.pkg.vhdl
+./hdl/src/pkg/config.vhd
+./hdl/src/spw_pkg_timeout.vhd
